@@ -1,0 +1,41 @@
+from onvif import ONVIFCamera
+mycam = ONVIFCamera('192.168.15.54', 8080, 'alexandramariaswan', 'Ef7UD8t6QNsd', 'C:/Python27/lib/site-packages/wsdl/')
+
+#mycam = ONVIFCamera('192.168.15.42', 80, 'alexandramariaswan', 'Ef7UD8t6QNsd', 'C:/Python27/lib/site-packages/wsdl/')
+
+#getting info of device
+print(mycam.devicemgmt.GetDeviceInformation())
+
+media_service = mycam.create_media_service()
+profiles = media_service.GetProfiles()[0]
+print(profiles)
+token = media_service.GetProfiles()[0].token
+
+ptz = mycam.create_ptz_service()
+ptz_token = profiles.PTZConfiguration.token
+
+#trying Absolute move
+ptz.create_type('AbsoluteMove')
+pos = ptz.GetStatus({'ProfileToken': token}).Position
+x0 = pos.PanTilt.x
+y0 = pos.PanTilt.y
+print(x0,y0) #current coordinates
+
+if x0 >= 0 and x0 <=1:  # if x between 0 and 1 we will substract 0.1, otherwise we'll add 0.1
+ ptz.AbsoluteMove({'ProfileToken': token, 'Position':{'PanTilt':{'x': x0 - 0.1,'y': y0}}})
+else:
+  ptz.AbsoluteMove({'ProfileToken': token, 'Position':{'PanTilt':{'x': x0 + 0.1,'y': y0}}})
+
+if y0 >= 0 and y0 <=1:  # if y between 0 and 1 we will substract 0.1, otherwise we'll add 0.1
+ ptz.AbsoluteMove({'ProfileToken': token, 'Position':{'PanTilt':{'x': x0,'y': y0 - 0.1}}})
+else:
+ ptz.AbsoluteMove({'ProfileToken': token, 'Position':{'PanTilt':{'x': x0,'y': y0 + 0.1}}})
+
+pos = ptz.GetStatus({'ProfileToken': token}).Position
+x = pos.PanTilt.x
+y = pos.PanTilt.y
+
+if x == x0 and y == y0:
+ print('Absolute move is not supported by this camera')
+else:
+ print('Absolute move is supported by this camera')
